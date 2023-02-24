@@ -3,7 +3,27 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 
-from .forms import LoginForm
+from .forms import LoginForm, UserRegistrationForm
+
+
+def user_register(request):
+    if request.method == 'POST':
+        user_form = UserRegistrationForm(request.POST)
+        if user_form.is_valid():
+            new_user = user_form.save(commit=False)  # don't save the user now, because we want to add on it.
+            new_user.set_password(  # this method is for hashing passwords rather than put it in a plain text.
+                user_form.cleaned_data['password1']
+            )
+            new_user.save()
+            return render(request, 'account/register_done.html', {'user_form': user_form})
+    else:
+        user_form = UserRegistrationForm()
+    return render(request,
+                  'account/register.html',
+                  {'user_form': user_form}
+                  )
+
+
 
 
 def user_login(request):

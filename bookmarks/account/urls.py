@@ -1,6 +1,8 @@
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # previous login url
@@ -32,5 +34,10 @@ urlpatterns = [
     #      name='password_reset_complete'),
     path('', include('django.contrib.auth.urls')),
     path('', views.dashboard, name='dashboard'),
-    path('register/', views.user_register, name='user_register')
+    path('register/', views.user_register, name='user_register'),
+    path('edit/', views.edit, name='edit'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

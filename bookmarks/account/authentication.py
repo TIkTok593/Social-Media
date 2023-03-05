@@ -12,7 +12,8 @@ def create_profile(backend, user, *args, **kwargs):
 
 class EmailAuthBackend:
     """
-    Authenticate Using an email address
+    Authenticate Using an email address, not only the username.
+    So, If you enter either your username or email it'll succeed.
     """
 
     def authenticate(self, request, username=None, password=None):

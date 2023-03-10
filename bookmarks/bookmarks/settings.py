@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'social_django',
     'django_extensions',
     'images.apps.ImagesConfig',
-    'easy_thumbnails',
+    # 'easy_thumbnails',
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -170,3 +170,11 @@ if DEBUG:
     mimetypes.add_type('text/css', '.css', True)
 
 THUMBNAIL_DEBUG = True
+
+
+from django.urls import reverse_lazy
+# ...
+ABSOLUTE_URL_OVERRIDES = {
+    'auth.user': lambda u: reverse_lazy('user_detail',
+                                        args=[u.username])
+}

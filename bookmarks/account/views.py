@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from .forms import LoginForm, UserRegistrationForm, \
     UserEditForm, ProfileEditForm
 from .models import Profile, Contact
+from actions.utils import create_action
 
 
 def user_register(request):
@@ -21,6 +22,7 @@ def user_register(request):
             )
             new_user.save()
             Profile.objects.create(user=new_user)
+            create_action(new_user, 'has created an account')
             return render(request, 'account/register_done.html', {'user_form': user_form})
     else:
         user_form = UserRegistrationForm()
@@ -116,9 +118,12 @@ def user_follow(request):
                     user_from=request.user,
                     user_to=user
                 )
+                create_action(request.user, 'is following', user)
             else:
                 Contact.objects.filter(user_from=request.user, user_to=user).delete()  # # because we're using intermediary, so I used delete not remove
             return JsonResponse({'status': 'ok'})
         except User.DoesNotExist:
             return JsonResponse({'status', 'error'})
     return JsonResponse({'status': 'error'})
+
+

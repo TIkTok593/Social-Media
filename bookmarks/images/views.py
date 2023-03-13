@@ -4,10 +4,17 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.conf import settings
 
 from .forms import ImageCreateForm
 from .models import Image
 from actions.utils import create_action
+
+import redis
+
+r = redis.Redis(settings.REDIS_HOST,
+                settings.REDIS_PORT,
+                settings.REDIS_DB)
 
 
 @login_required
@@ -35,14 +42,34 @@ def image_create(request):
 
 def image_detail(request, id, slug):
     image = get_object_or_404(Image, id=id, slug=slug)
+    total_views = r.incr(f'image:{image.id}:views')
+    r.zincrby('image_ranking', 1, image.id)
     return render(
         request,
         'images/image/detail.html',
         {
             'section': 'images',
-            'image': image
+            'image': image,
+            'total_views': total_views
         }
     )
+
+
+@login_required
+def image_ranking(request):
+    # get image ranking dictionary
+    image_ranking = r.zrange('image_ranking', 0, -1,
+                             desc=True)[:10]
+    image_ranking_ids = [int(id) for id in image_ranking]
+    # get most viewed images
+    most_viewed = list(Image.objects.filter(  # you have to force the query set to execute, because it's lazy
+                           id__in=image_ranking_ids))  # we use list(), because we will sort it
+    most_viewed.sort(key=lambda x: image_ranking_ids.index(x.id))
+    return render(request,
+                  'images/image/ranking.html',
+                  {'section': 'images',
+                   'most_viewed': most_viewed})
+
 
 
 @login_required
